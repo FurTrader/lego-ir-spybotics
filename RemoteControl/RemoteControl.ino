@@ -330,9 +330,10 @@ uint16_t All_OrangeStp_YellowStp[All_OrangeStp_YellowStp_LEN]={
 
 
 void setup() {
-  Serial.begin(9600);
-  delay(2000); while (!Serial); //delay for Leonardo
-  Serial.println(F("Every time you press a key is a serial monitor we will send."));
+  Serial.begin(37000);
+  //delay(2000); 
+  //while (!Serial); //delay for Leonardo
+  Serial.println("Every time you press a key is a serial monitor we will send.");
 }
 
 
