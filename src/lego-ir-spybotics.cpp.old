@@ -331,11 +331,6 @@ uint16_t All_OrangeStp_YellowStp[All_OrangeStp_YellowStp_LEN]={
 
 #define PROGRAMMING_PIN 2 // ground this pin to disable power saving modes
 
-#define LEFT_FWD_PB 3
-#define LEFT_REV_PB 3
-#define LEFT_FWD_PB 3
-#define LEFT_REV_PB 3
-
 bool programming_mode = false;
 
 void setup() {
