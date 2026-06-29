@@ -19,22 +19,22 @@ IRsendRaw mySender;
 // RXLED0  PORTB |= (1<<0)   // RX off
 // RXLED1  PORTB &= ~(1<<0)  // RX on
 
-#define PROGRAMMING_PIN 4 // ground this pin to disable power saving modes
+#define PROGRAMMING_PIN 5 // pull down this pin to disable power saving modes and keep USB alive
 
-#define LEFT_FWD_PB  3   // INT0 / PD0
-#define LEFT_REV_PB  2   // INT1 / PD1
-#define RIGHT_FWD_PB 0   // INT2 / PD2
-#define RIGHT_REV_PB 1   // INT3 / PD3
+#define LEFT_REV_PB  3   // INT0 / PD0
+#define LEFT_FWD_PB  2   // INT1 / PD1
+#define RIGHT_REV_PB 0   // INT2 / PD2
+#define RIGHT_FWD_PB 1   // INT3 / PD3
 
 bool programming_mode = false;
 
 volatile uint8_t wakeSource = 0;
 
 // ── ISRs: disable themselves immediately, just record which button ──
-ISR(INT0_vect) { EIMSK &= ~(1 << INT0); wakeSource = LEFT_FWD_PB; }
-ISR(INT1_vect) { EIMSK &= ~(1 << INT1); wakeSource = LEFT_REV_PB; }
-ISR(INT2_vect) { EIMSK &= ~(1 << INT2); wakeSource = RIGHT_FWD_PB; }
-ISR(INT3_vect) { EIMSK &= ~(1 << INT3); wakeSource = RIGHT_REV_PB; }
+ISR(INT0_vect) { EIMSK &= ~(1 << INT0); }
+ISR(INT1_vect) { EIMSK &= ~(1 << INT1); }
+ISR(INT2_vect) { EIMSK &= ~(1 << INT2); }
+ISR(INT3_vect) { EIMSK &= ~(1 << INT3); }
 
 // enable the interrupts to prepare for sleep
 void enableWakeInterrupts() {
