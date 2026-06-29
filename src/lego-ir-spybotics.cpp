@@ -7,11 +7,10 @@
 #include "IRLibSendBase.h"    //We need the base code
 #include "IRLib_HashRaw.h"    //Only use raw sender
 #include "IR_patterns.h"
+#include "IR_functions.h"
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include <avr/interrupt.h>
-
-IRsendRaw mySender;
 
 //The TX and RX LEDs are available if we aren't using USB
 // TXLED0  PORTD |= (1<<5)   // TX off
@@ -26,9 +25,12 @@ IRsendRaw mySender;
 #define RIGHT_REV_PB 0   // INT2 / PD2
 #define RIGHT_FWD_PB 1   // INT3 / PD3
 
+// PD0=LEFT_REV, PD1=LEFT_FWD, PD2=RIGHT_REV, PD3=RIGHT_FWD
+#define BUTTON_MASK 0x0F  // bits 0-3
+
 bool programming_mode = false;
 
-volatile uint8_t wakeSource = 0;
+#define SLEEP_TIMEOUT 500
 
 // ── ISRs: disable themselves immediately, just record which button ──
 ISR(INT0_vect) { EIMSK &= ~(1 << INT0); }
@@ -80,11 +82,24 @@ void enterSleep() {
 
     TXLED1; // turn on the tx led
 }
+ 
+//returns true if a button was pressed, false otherwise
+// reads the buttons on port D and packs them into 4 bits
+// Buttons are active LOW (INPUT_PULLUP), so invert with ~
+// PD0=LEFT_REV, PD1=LEFT_FWD, PD2=RIGHT_REV, PD3=RIGHT_FWD
+bool handleButtons(void) {
+  uint8_t button_bits = (~PIND) & BUTTON_MASK;
 
-void handleButton(uint8_t pin) {
-    if (digitalRead(pin) == LOW) {
-        // still held, process it
-    }
+  if (programming_mode){
+    Serial.println(button_bits);
+  }
+
+  send_all(button_bits);
+
+  if (button_bits){
+    return true;
+  }
+  return false;
 }
 
 void setup() {
@@ -113,20 +128,24 @@ void setup() {
 
     // Start with both off (active LOW)
     PORTB |= (1 << PB0);
-    PORTD |= (1 << PD5);
-
-    TXLED1; // turn on the tx led
+    PORTD |= (1 << PD5); 
   }
+  TXLED1; // turn on the tx led
 }
 
 void loop() {
-  wakeSource = 0;
-  if (!programming_mode){
-    delay(2000);
+  static uint32_t timeout = 0;
+  timeout = millis();
+  
+  while ((timeout + SLEEP_TIMEOUT) > millis()){
+    if (handleButtons()){
+      timeout = millis(); //reset timeout
+    }
+    delay(25); // dwell time between transmissions
+  }
+
+  if (!programming_mode){ // dont sleep in programming mode
     enterSleep();
   }
 
-  // --- Back awake, debounce then handle button ---
-  delay(2000);
-  handleButton(wakeSource);
 }
